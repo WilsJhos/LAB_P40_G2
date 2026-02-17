@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Tareas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-check-circle text-blue-500 mr-3 text-4xl"></i>
+                        Gestión de Tareas
+                    </h1>
+                    <p class="text-gray-500 mt-1">Organiza tus tareas de manera eficiente</p>
+                </div>
+                
+                <!-- Botón Nueva Tarea -->
+                <a href="{% url 'crear_tarea' %}" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-5 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 flex items-center shadow-md">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nueva Tarea
+                </a>
+            </div>
+            
+            <!-- Tarjetas de estadísticas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 rounded-lg p-3 mr-4">
+                            <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Tareas</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ total_tareas }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-lg p-3 mr-4">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Completadas</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ completadas }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 rounded-lg p-3 mr-4">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Pendientes</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ pendientes }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center">
+                        <div class="bg-red-100 rounded-lg p-3 mr-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Vencidas</p>
+                            <p class="text-2xl font-bold text-gray-800">{{ vencidas }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-6">
+                <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-gray-600 text-sm font-medium mb-2">
+                            <i class="fas fa-search mr-1 text-gray-400"></i> Buscar
+                        </label>
+                        <input type="text" name="busqueda" value="{{ busqueda }}" 
+                               class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                               placeholder="Buscar tareas...">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-600 text-sm font-medium mb-2">
+                            <i class="fas fa-tag mr-1 text-gray-400"></i> Estado
+                        </label>
+                        <select name="estado" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition">
+                            <option value="">Todos</option>
+                            <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="en_progreso" {% if filtro_estado == 'en_progreso' %}selected{% endif %}>En Progreso</option>
+                            <option value="completada" {% if filtro_estado == 'completada' %}selected{% endif %}>Completada</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-600 text-sm font-medium mb-2">
+                            <i class="fas fa-flag mr-1 text-gray-400"></i> Prioridad
+                        </label>
+                        <select name="prioridad" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition">
+                            <option value="">Todas</option>
+                            <option value="alta" {% if filtro_prioridad == 'alta' %}selected{% endif %}>Alta</option>
+                            <option value="media" {% if filtro_prioridad == 'media' %}selected{% endif %}>Media</option>
+                            <option value="baja" {% if filtro_prioridad == 'baja' %}selected{% endif %}>Baja</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-end space-x-2">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                            <i class="fas fa-filter mr-1"></i> Filtrar
+                        </button>
+                        <a href="{% url 'lista_tareas' %}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 text-center">
+                            <i class="fas fa-undo mr-1"></i> Limpiar
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Mensajes flash -->
+            {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                        <div class="p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- Lista de tareas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {% for tarea in tareas %}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition duration-200 overflow-hidden">
+                    <!-- Cabecera de color según prioridad -->
+                    <div class="h-2 {% if tarea.prioridad == 'alta' %}bg-red-500{% elif tarea.prioridad == 'media' %}bg-yellow-500{% else %}bg-green-500{% endif %}"></div>
+                    
+                    <div class="p-5">
+                        <!-- Título y prioridad -->
+                        <div class="flex items-start justify-between mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800 {% if tarea.estado == 'completada' %}line-through text-gray-500{% endif %}">
+                                {{ tarea.titulo }}
+                            </h3>
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full 
+                                {% if tarea.prioridad == 'alta' %}bg-red-100 text-red-700
+                                {% elif tarea.prioridad == 'media' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-green-100 text-green-700{% endif %}">
+                                {{ tarea.get_prioridad_display }}
+                            </span>
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                            {{ tarea.descripcion|default:"Sin descripción" }}
+                        </p>
+                        
+                        <!-- Fechas -->
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center text-xs text-gray-500">
+                                <i class="fas fa-calendar-alt mr-2 w-4"></i>
+                                <span>Creada: {{ tarea.fecha_creacion|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            {% if tarea.fecha_vencimiento %}
+                            <div class="flex items-center text-xs {% if tarea.dias_restantes and tarea.dias_restantes < 0 %}text-red-600{% else %}text-gray-500{% endif %}">
+                                <i class="fas fa-hourglass-end mr-2 w-4"></i>
+                                <span>Vence: {{ tarea.fecha_vencimiento|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Estado y acciones -->
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full
+                                {% if tarea.estado == 'pendiente' %}bg-yellow-100 text-yellow-700
+                                {% elif tarea.estado == 'en_progreso' %}bg-blue-100 text-blue-700
+                                {% elif tarea.estado == 'completada' %}bg-green-100 text-green-700
+                                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                <i class="fas 
+                                    {% if tarea.estado == 'pendiente' %}fa-clock
+                                    {% elif tarea.estado == 'en_progreso' %}fa-spinner
+                                    {% elif tarea.estado == 'completada' %}fa-check-circle
+                                    {% else %}fa-ban{% endif %} mr-1">
+                                </i>
+                                {{ tarea.get_estado_display }}
+                            </span>
+                            
+                            <div class="flex space-x-2">
+                                <form method="POST" action="{% url 'cambiar_estado' tarea.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <select name="estado" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        <option value="pendiente" {% if tarea.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                                        <option value="en_progreso" {% if tarea.estado == 'en_progreso' %}selected{% endif %}>En Progreso</option>
+                                        <option value="completada" {% if tarea.estado == 'completada' %}selected{% endif %}>Completada</option>
+                                        <option value="cancelada" {% if tarea.estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                                    </select>
+                                </form>
+                                
+                                <a href="{% url 'editar_tarea' tarea.id %}" class="text-gray-400 hover:text-blue-500 transition" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'eliminar_tarea' tarea.id %}" class="text-gray-400 hover:text-red-500 transition" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <!-- Mensaje cuando no hay tareas -->
+                <div class="col-span-full text-center py-16">
+                    <div class="bg-white rounded-xl shadow-sm p-8 max-w-md mx-auto border border-gray-100">
+                        <div class="text-gray-400 text-6xl mb-4">
+                            <i class="far fa-clipboard"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay tareas disponibles</h3>
+                        <p class="text-gray-500 mb-6">Comienza organizando tu día creando una nueva tarea</p>
+                        <a href="{% url 'crear_tarea' %}" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-plus mr-2"></i>
+                            Crear mi primera tarea
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Footer -->
+            <div class="mt-8 text-center text-gray-400 text-sm">
+                <p>Gestor de Tareas v1.0 - Diseño simple y funcional</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
